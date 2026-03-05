@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using AStarPathfinding;
 using UnityEngine.Events;
 using DG.Tweening;
+using Unity.Behavior;
+using Unity.Services.Analytics;
 
 public class GhostController : MonoBehaviour
 {
@@ -22,21 +24,28 @@ public class GhostController : MonoBehaviour
 	public List<Vector3> path = new List<Vector3>();
 
 	private bool pathCompleted = false;
+	private BehaviorGraphAgent agent;
 
-    public Action pathCompletedEvent;
-    public Action moveCompletedEvent;
-    public Action killedEvent;
+    public System.Action pathCompletedEvent;
+    public System.Action moveCompletedEvent;
+    public System.Action killedEvent;
+    public System.Action resurrectEvent;
 
     void Start()
 	{
-		_animator = GetComponent<Animator>();
-		GameDirector.Instance.GameStateChanged += GameStateChanged;
+        _animator = GetComponent<Animator>();
+		agent = GetComponent<BehaviorGraphAgent>();
+
+        GameDirector.Instance.GameStateChanged += GameStateChanged;
 
         GhostBaseState[] behaviors = _animator.GetBehaviours<GhostBaseState>();
         foreach (GhostBaseState state in behaviors)
         {
             state.Init(gameObject, moveToLocation);
         }
+
+		killedEvent += () => { agent.SetVariableValue<bool>("isDead", true); };
+        resurrectEvent += () => { agent.SetVariableValue<bool>("isDead", false); };
     }
 
     private void OnDestroy()
@@ -112,6 +121,10 @@ public class GhostController : MonoBehaviour
 	public void Resurrect()
 	{
         _animator.SetBool("IsDead", false);
+        if (resurrectEvent != null)
+        {
+            resurrectEvent.Invoke();
+        }
     }
 
 	public void GameStateChanged(GameDirector.States _state)
