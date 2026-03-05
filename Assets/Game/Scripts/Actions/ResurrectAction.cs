@@ -5,7 +5,7 @@ using Action = Unity.Behavior.Action;
 using Unity.Properties;
 
 [Serializable, GeneratePropertyBag]
-[NodeDescription(name: "Resurrect", story: "[ghost] Die", category: "Action", id: "dffb0dee4a54cbfbfae1dbed471369ef")]
+[NodeDescription(name: "Resurrect", story: "[ghost] Resurrect", category: "Action", id: "9ca0f161a20c2318e624f22cc3d628a9")]
 public partial class ResurrectAction : Action
 {
     [SerializeReference] public BlackboardVariable<GhostController> Ghost;
@@ -23,6 +23,6 @@ public partial class ResurrectAction : Action
 
     protected override void OnEnd()
     {
+        Ghost.Value.ResetSpeed();
     }
 }
-

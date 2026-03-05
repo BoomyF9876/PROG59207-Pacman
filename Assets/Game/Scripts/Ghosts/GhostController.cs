@@ -1,18 +1,25 @@
 ﻿using System;
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using AStarPathfinding;
-using UnityEngine.Events;
 using DG.Tweening;
 using Unity.Behavior;
-using Unity.Services.Analytics;
+
+public enum GhostType
+{
+	Blinky,
+	Clyde,
+	Inky,
+	Pinky
+}
 
 public class GhostController : MonoBehaviour
 {
+	public GhostType ghostType;
 	public Vector2 ReturnLocation = new Vector2(0, 0);
 
 	private Animator _animator;
+	private float chaseSpeed;
 	public Transform PacMan;
 	public float speed;
 
@@ -25,27 +32,31 @@ public class GhostController : MonoBehaviour
 
 	private bool pathCompleted = false;
 	private BehaviorGraphAgent agent;
+	public GhostObject ghostObject;
 
     public System.Action pathCompletedEvent;
     public System.Action moveCompletedEvent;
-    public System.Action killedEvent;
+    
+	public System.Action killedEvent;
     public System.Action resurrectEvent;
+    public System.Action escapeEvent;
+    public System.Action powerWearOffEvent;
 
     void Start()
 	{
         _animator = GetComponent<Animator>();
 		agent = GetComponent<BehaviorGraphAgent>();
+        ghostObject = GetComponent<GhostObject>();
+		chaseSpeed = speed;
 
         GameDirector.Instance.GameStateChanged += GameStateChanged;
 
-        GhostBaseState[] behaviors = _animator.GetBehaviours<GhostBaseState>();
-        foreach (GhostBaseState state in behaviors)
-        {
-            state.Init(gameObject, moveToLocation);
-        }
+        ghostObject.Init(gameObject, moveToLocation);
 
-		killedEvent += () => { agent.SetVariableValue<bool>("isDead", true); };
+        killedEvent += () => { agent.SetVariableValue<bool>("isDead", true); };
         resurrectEvent += () => { agent.SetVariableValue<bool>("isDead", false); };
+        escapeEvent += () => { agent.SetVariableValue<bool>("isInvincible", true); };
+        powerWearOffEvent += () => { agent.SetVariableValue<bool>("isInvincible", false); };
     }
 
     private void OnDestroy()
@@ -127,17 +138,30 @@ public class GhostController : MonoBehaviour
         }
     }
 
+	public void ResetSpeed()
+	{
+		speed = chaseSpeed;
+	}
+
 	public void GameStateChanged(GameDirector.States _state)
 	{
 		switch (_state)
 		{
 			case GameDirector.States.enState_Normal:
 				_animator.SetBool("IsGhost", false);
-				break;
+                if (powerWearOffEvent != null)
+                {
+                    powerWearOffEvent.Invoke();
+                }
+                break;
 
 			case GameDirector.States.enState_PacmanInvincible:
 				_animator.SetBool("IsGhost", true);
-				break;
+                if (escapeEvent != null)
+                {
+                    escapeEvent.Invoke();
+                }
+                break;
 
 			case GameDirector.States.enState_GameOver:
 				break;
