@@ -31,7 +31,7 @@ public class GhostController : MonoBehaviour
 	public List<Vector3> path = new List<Vector3>();
 
 	private bool pathCompleted = false;
-	private BehaviorGraphAgent agent;
+	public BehaviorGraphAgent agent;
 	public GhostObject ghostObject;
 
     public System.Action pathCompletedEvent;
@@ -57,6 +57,7 @@ public class GhostController : MonoBehaviour
         resurrectEvent += () => { agent.SetVariableValue<bool>("isDead", false); };
         escapeEvent += () => { agent.SetVariableValue<bool>("isInvincible", true); };
         powerWearOffEvent += () => { agent.SetVariableValue<bool>("isInvincible", false); };
+		pathCompletedEvent += () => { agent.SetVariableValue<bool>("isMovingCompleted", false); };
     }
 
     private void OnDestroy()

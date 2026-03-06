@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class GhostDeathState : GhostBaseState
 {
@@ -7,17 +8,31 @@ public class GhostDeathState : GhostBaseState
     private void Resurrect()
     {
         ghost.SetMoveToLocation(resetPos);
+        ghost.pathCompletedEvent += BackToNormal;
         isReturning = true;
+    }
+
+    private void BackToNormal()
+    {
+        // Stay in base for gapTime seconds then return to patrol
+        ghost.StartCoroutine(WaitForSeconds(gapTime));
+    }
+
+    IEnumerator WaitForSeconds(float waitTime)
+    {
+        yield return new WaitForSeconds(waitTime);
+
+        ghost.Resurrect();
     }
 
     public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        gapTime = 2;
+        gapTime = 2.0f;
     }
 
     public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        // Wait for 1s before setting the next destination
+        // Stand still for gapTime seconds then go the base
         if (nextActionTime < gapTime)
         {
             nextActionTime += Time.deltaTime;
@@ -26,5 +41,11 @@ public class GhostDeathState : GhostBaseState
         {
             if (!isReturning) Resurrect();
         }
+    }
+
+    public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        base.OnStateExit(animator, stateInfo, layerIndex);
+        ghost.moveCompletedEvent -= BackToNormal;
     }
 }

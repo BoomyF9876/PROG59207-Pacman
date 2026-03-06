@@ -19,7 +19,7 @@ public class PinkyChaseState : GhostBaseState
 
     public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        // Wait for 1s before setting the next destination
+        // Wait for gapTime seconds before setting the next destination
         if (nextActionTime < gapTime)
         {
             nextActionTime += Time.deltaTime;
